@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - E-Wallet</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background: #f8f9fa; padding: 20px; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        .header {
+            background: white;
+            border-radius: 24px;
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header .brand { font-size: 22px; font-weight: 700; color: #1e3c2a; }
+        .header .brand i { color: #28a745; margin-right: 8px; }
+        .header .admin-info { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .header .admin-info .badge { background: #dc3545; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .logout-btn { background: #fde8e8; border: none; padding: 8px 20px; border-radius: 40px; color: #dc3545; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .logout-btn:hover { background: #fcd0d0; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+        .stat-card .label { font-size: 13px; color: #6a7a7a; font-weight: 500; }
+        .stat-card .value { font-size: 28px; font-weight: 700; color: #1e3c2a; margin-top: 4px; }
+        .stat-card .value i { color: #28a745; margin-right: 6px; }
+        
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px 28px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            margin-bottom: 24px;
+        }
+        .card h3 { color: #1e3c2a; margin-bottom: 16px; }
+        .card h3 i { color: #28a745; margin-right: 8px; }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 24px;
+            border: 2px solid #d4e8d4;
+            border-radius: 30px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            color: #4a7a5a;
+            transition: 0.3s;
+        }
+        .tab-btn.active { border-color: #28a745; background: #e8f5e9; color: #1e3c2a; }
+        .tab-btn:hover { border-color: #28a745; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { text-align: left; padding: 12px 8px; background: #f8faf8; color: #1e3c2a; font-weight: 600; border-bottom: 2px solid #d4e8d4; }
+        td { padding: 12px 8px; border-bottom: 1px solid #eef5ee; }
+        
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-badge.pending { background: #fff3cd; color: #856404; }
+        .status-badge.approved { background: #e8f5e9; color: #28a745; }
+        .status-badge.rejected { background: #fde8e8; color: #dc3545; }
+        
+        .btn-approve { background: #28a745; color: white; border: none; padding: 6px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; transition: 0.3s; margin: 2px; }
+        .btn-approve:hover { background: #1e8a3a; }
+        .btn-reject { background: #dc3545; color: white; border: none; padding: 6px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; transition: 0.3s; margin: 2px; }
+        .btn-reject:hover { background: #c82333; }
+        .btn-success { background: #28a745; color: white; border: none; padding: 8px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .btn-success:hover { background: #1e8a3a; }
+        
+        .notif-form { display: grid; gap: 12px; max-width: 500px; }
+        .notif-form select, .notif-form textarea, .notif-form input {
+            padding: 12px 16px;
+            border: 2px solid #d4e8d4;
+            border-radius: 16px;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+            background: white;
+        }
+        .notif-form select:focus, .notif-form textarea:focus, .notif-form input:focus {
+            border-color: #28a745;
+            box-shadow: 0 0 0 4px rgba(40,167,69,0.1);
+        }
+        .notif-form textarea { min-height: 80px; resize: vertical; }
+        
+        .notif-list { max-height: 300px; overflow-y: auto; }
+        .notif-item { padding: 10px 12px; border-bottom: 1px solid #eef5ee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-item .msg { flex: 1; min-width: 150px; }
+        .notif-item .time { font-size: 12px; color: #6a9a7a; }
+        .notif-item .target { font-size: 12px; color: #28a745; font-weight: 600; }
+        
+        .empty-state { text-align: center; padding: 30px; color: #6a9a7a; }
+        .empty-state i { font-size: 40px; color: #c0dcc0; margin-bottom: 12px; display: block; }
+        
+        .message-box {
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-top: 12px;
+            display: none;
+        }
+        .message-box.success { display: block; background: #e8f5e9; border-left: 4px solid #28a745; color: #1e5a2a; }
+        .message-box.error { display: block; background: #fde8e8; border-left: 4px solid #dc3545; color: #8a2a2a; }
+        
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+        .login-overlay.active { display: flex; }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .login-box h2 { color: #1e3c2a; margin-bottom: 8px; text-align: center; }
+        .login-box p { color: #6a9a7a; margin-bottom: 24px; text-align: center; }
+        .login-box .form-group { margin-bottom: 16px; }
+        .login-box input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #d4e8d4;
+            border-radius: 28px;
+            font-size: 15px;
+            outline: none;
+            transition: 0.2s;
+        }
+        .login-box input:focus { border-color: #28a745; box-shadow: 0 0 0 4px rgba(40,167,69,0.1); }
+        .login-box .btn-primary {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 40px;
+            background: linear-gradient(145deg, #28a745, #1e8a3a);
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .login-box .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(40,167,69,0.4); }
+        .login-box .error-msg { color: #dc3545; font-size: 14px; margin-top: 8px; display: none; text-align: center; }
+        
+        .btn-sm { padding: 4px 12px; font-size: 12px; border-radius: 16px; border: none; cursor: pointer; font-weight: 600; }
+        .btn-sm.approve { background: #28a745; color: white; }
+        .btn-sm.approve:hover { background: #1e8a3a; }
+        .btn-sm.reject { background: #dc3545; color: white; }
+        .btn-sm.reject:hover { background: #c82333; }
+        
+        @media (max-width: 600px) {
+            .header { padding: 14px 16px; }
+            .card { padding: 16px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .stat-card { padding: 14px 16px; }
+            .stat-card .value { font-size: 20px; }
+            table { font-size: 12px; }
+            th, td { padding: 8px 4px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============ LOGIN OVERLAY ============ -->
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+        <h2><i class="fas fa-shield-alt" style="color:#28a745;"></i> Admin Login</h2>
+        <p>Masuk sebagai administrator</p>
+        <div class="form-group">
+            <input type="text" id="adminLoginUser" placeholder="Username" value="admin">
+        </div>
+        <div class="form-group">
+            <input type="password" id="adminLoginPass" placeholder="Password" value="admin123">
+        </div>
+        <button class="btn-primary" id="adminLoginBtn">Masuk sebagai Admin</button>
+        <div class="error-msg" id="adminLoginError">Username atau password salah!</div>
+    </div>
+</div>
+
+<!-- ============ MAIN CONTENT ============ -->
+<div class="container" id="mainContent" style="display:none;">
+    <div class="header">
+        <div class="brand"><i class="fas fa-shield-alt"></i> Panel Admin</div>
+        <div class="admin-info">
+            <span class="badge"><i class="fas fa-user-shield"></i> Admin</span>
+            <span id="adminName">Admin</span>
+            <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="label">Total User</div>
+            <div class="value"><i class="fas fa-users"></i> <span id="totalUsers">0</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Transaksi Pending</div>
+            <div class="value"><i class="fas fa-clock"></i> <span id="pendingCount">0</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Total Transaksi</div>
+            <div class="value"><i class="fas fa-exchange-alt"></i> <span id="totalTransactions">0</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Notifikasi Terkirim</div>
+            <div class="value"><i class="fas fa-bell"></i> <span id="notifCount">0</span></div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="tabPending">Transaksi Pending</button>
+        <button class="tab-btn" data-tab="tabAll">Semua Transaksi</button>
+        <button class="tab-btn" data-tab="tabNotif">Kirim Notifikasi</button>
+        <button class="tab-btn" data-tab="tabUsers">Daftar User</button>
+    </div>
+
+    <!-- Tab Pending -->
+    <div id="tabPending" class="tab-content active">
+        <div class="card">
+            <h3><i class="fas fa-clock"></i> Transaksi Menunggu Persetujuan</h3>
+            <div id="pendingList"></div>
+        </div>
+    </div>
+
+    <!-- Tab All Transaksi -->
+    <div id="tabAll" class="tab-content">
+        <div class="card">
+            <h3><i class="fas fa-history"></i> Semua Transaksi</h3>
+            <div id="allTransactionsList"></div>
+        </div>
+    </div>
+
+    <!-- Tab Kirim Notifikasi -->
+    <div id="tabNotif" class="tab-content">
+        <div class="card">
+            <h3><i class="fas fa-bell"></i> Kirim Notifikasi</h3>
+            <div class="notif-form">
+                <div>
+                    <label style="font-weight:600; display:block; margin-bottom:4px;">Kirim Ke</label>
+                    <select id="notifTarget">
+                        <option value="all">Semua User</option>
+                        <option value="specific">User Tertentu</option>
+                    </select>
+                </div>
+                <div id="specificUserDiv" style="display:none;">
+                    <label style="font-weight:600; display:block; margin-bottom:4px;">Pilih User</label>
+                    <select id="notifUser">
+                        <option value="">-- Pilih User --</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-weight:600; display:block; margin-bottom:4px;">Pesan Notifikasi</label>
+                    <textarea id="notifMessage" placeholder="Masukkan pesan notifikasi..."></textarea>
+                </div>
+                <button class="btn-success" id="sendNotifBtn"><i class="fas fa-paper-plane"></i> Kirim Notifikasi</button>
+            </div>
+            <div id="notifMessageBox" class="message-box"></div>
+            <hr style="margin: 24px 0; border-color: #eef5ee;">
+            <h4 style="margin-bottom:12px;">Riwayat Notifikasi</h4>
+            <div id="notifHistory" class="notif-list"></div>
+        </div>
+    </div>
+
+    <!-- Tab Users -->
+    <div id="tabUsers" class="tab-content">
+        <div class="card">
+            <h3><i class="fas fa-users"></i> Daftar User</h3>
+            <div id="usersList"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============ KONFIGURASI JSONBIN ============
+    const BIN_ID = '6a98d4c6da38895dfe320042';
+    const API_KEY = '$2a$10$ZdPvz/KDyhLfJPpr/U9YCOeulddJOcfrF2ow3BRAwMZ0YayGDwluG';
+    const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    // =============================================
+
+    let allUsers = [];
+    let isAdminLoggedIn = false;
+    const ADMIN_CREDENTIALS = {
+        username: 'admin',
+        password: 'admin123'
+    };
+
+    // ============ LOGIN FUNCTIONS ============
+    function showLogin() {
+        document.getElementById('loginOverlay').classList.add('active');
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('adminLoginError').style.display = 'none';
+    }
+
+    function hideLogin() {
+        document.getElementById('loginOverlay').classList.remove('active');
+        document.getElementById('mainContent').style.display = 'block';
+    }
+
+    document.getElementById('adminLoginBtn').addEventListener('click', function() {
+        const username = document.getElementById('adminLoginUser').value.trim();
+        const password = document.getElementById('adminLoginPass').value.trim();
+
+        if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+            isAdminLoggedIn = true;
+            sessionStorage.setItem('adminLoggedIn', 'true');
+            hideLogin();
+            loadAllData();
+            document.getElementById('adminName').textContent = 'Admin';
+        } else {
+            document.getElementById('adminLoginError').style.display = 'block';
+        }
+    });
+
+    document.getElementById('adminLoginPass').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('adminLoginBtn').click();
+        }
+    });
+    document.getElementById('adminLoginUser').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('adminLoginBtn').click();
+        }
+    });
+
+    if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+        isAdminLoggedIn = true;
+        hideLogin();
+        loadAllData();
+        document.getElementById('adminName').textContent = 'Admin';
+    } else {
+        showLogin();
+    }
+
+    // ============ LOGOUT ============
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        sessionStorage.removeItem('adminLoggedIn');
+        isAdminLoggedIn = false;
+        showLogin();
+    });
+
+    // ============ CORE FUNCTIONS ============
+    function formatDate(dateString) {
+        const d = new Date(dateString);
+        return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function showNotifMessage(text, isError = false) {
+        const box = document.getElementById('notifMessageBox');
+        box.textContent = text;
+        box.className = 'message-box';
+        box.classList.add(isError ? 'error' : 'success');
+        box.style.display = 'block';
+        setTimeout(() => {
+            box.className = 'message-box';
+            box.style.display = 'none';
+        }, 5000);
+    }
+
+    async function loadUsers() {
+        try {
+            const resp = await fetch(BIN_URL, { 
+                headers: { 'X-Master-Key': API_KEY },
+                cache: 'no-cache'
+            });
+            const data = await resp.json();
+            allUsers = data.record || [];
+            // Simpan ke localStorage sebagai backup
+            localStorage.setItem('ewallet_demo_users', JSON.stringify(allUsers));
+            return allUsers;
+        } catch (e) {
+            console.warn('Error load from JSONBin, using localStorage:', e);
+            const local = localStorage.getItem('ewallet_demo_users');
+            allUsers = local ? JSON.parse(local) : [];
+            return allUsers;
+        }
+    }
+
+    async function saveUsers(users) {
+        try {
+            await fetch(BIN_URL, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-Master-Key': API_KEY 
+                },
+                body: JSON.stringify(users)
+            });
+            localStorage.setItem('ewallet_demo_users', JSON.stringify(users));
+            return true;
+        } catch (e) {
+            console.warn('Error save to JSONBin, saving to localStorage:', e);
+            localStorage.setItem('ewallet_demo_users', JSON.stringify(users));
+            return false;
+        }
+    }
+
+    // ============ RENDER FUNCTIONS ============
+    function renderStats() {
+        const totalUsers = allUsers.filter(u => !u.isAdmin).length;
+        let pendingCount = 0;
+        let totalTransactions = 0;
+
+        allUsers.forEach(user => {
+            if (user.transactions) {
+                totalTransactions += user.transactions.length;
+                user.transactions.forEach(t => {
+                    if (t.status === 'Pending' && !t.adminAction) pendingCount++;
+                });
+            }
+        });
+
+        document.getElementById('totalUsers').textContent = totalUsers;
+        document.getElementById('pendingCount').textContent = pendingCount;
+        document.getElementById('totalTransactions').textContent = totalTransactions;
+        
+        let notifCount = 0;
+        allUsers.forEach(u => { 
+            if (u.notifications) notifCount += u.notifications.filter(n => n.fromAdmin).length; 
+        });
+        document.getElementById('notifCount').textContent = notifCount;
+    }
+
+    function renderPending() {
+        const container = document.getElementById('pendingList');
+        let pendings = [];
+
+        allUsers.forEach(user => {
+            if (user.transactions) {
+                user.transactions.forEach(t => {
+                    if (t.status === 'Pending' && !t.adminAction) {
+                        pendings.push({ ...t, username: user.username, userIdx: allUsers.indexOf(user) });
+                    }
+                });
+            }
+        });
+
+        if (pendings.length === 0) {
+            container.innerHTML = `<div class="empty-state"><i class="fas fa-check-circle"></i>Tidak ada transaksi pending</div>`;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Jenis</th>
+                            <th>Nominal</th>
+                            <th>Keterangan</th>
+                            <th>Waktu</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pendings.map(p => `
+                            <tr>
+                                <td><strong>${p.username}</strong></td>
+                                <td>${p.type === 'topup_pending' ? 'Top Up Website' : 
+                                     p.type === 'bayar_ewallet_pending' ? 'Bayar E-Wallet' : p.type}</td>
+                                <td>Rp ${p.amount.toLocaleString()}</td>
+                                <td>${p.description || '-'}</td>
+                                <td>${formatDate(p.timestamp)}</td>
+                                <td>
+                                    <button class="btn-sm approve" onclick="approveTransaction('${p.username}', ${p.id})"><i class="fas fa-check"></i> Setuju</button>
+                                    <button class="btn-sm reject" onclick="rejectTransaction('${p.username}', ${p.id})"><i class="fas fa-times"></i> Tolak</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    function renderAllTransactions() {
+        const container = document.getElementById('allTransactionsList');
+        let allTrans = [];
+
+        allUsers.forEach(user => {
+            if (user.transactions && !user.isAdmin) {
+                user.transactions.forEach(t => {
+                    allTrans.push({ ...t, username: user.username });
+                });
+            }
+        });
+
+        if (allTrans.length === 0) {
+            container.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i>Belum ada transaksi</div>`;
+            return;
+        }
+
+        allTrans.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        container.innerHTML = `
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Jenis</th>
+                            <th>Nominal</th>
+                            <th>Keterangan</th>
+                            <th>Waktu</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${allTrans.map(t => `
+                            <tr>
+                                <td><strong>${t.username}</strong></td>
+                                <td>${t.type === 'topup_pending' ? 'Top Up Website' : 
+                                     t.type === 'bayar_ewallet_pending' ? 'Bayar E-Wallet' :
+                                     t.type === 'topup' ? 'Top Up' :
+                                     t.type === 'transfer_keluar' ? 'Transfer Keluar' :
+                                     t.type === 'transfer_masuk' ? 'Transfer Masuk' : t.type}</td>
+                                <td>Rp ${t.amount.toLocaleString()}</td>
+                                <td>${t.description || '-'}</td>
+                                <td>${formatDate(t.timestamp)}</td>
+                                <td><span class="status-badge ${t.status === 'Pending' ? 'pending' : t.status === 'Berhasil' ? 'approved' : 'rejected'}">${t.status}</span></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    function renderUsers() {
+        const container = document.getElementById('usersList');
+        const users = allUsers.filter(u => !u.isAdmin);
+
+        if (users.length === 0) {
+            container.innerHTML = `<div class="empty-state"><i class="fas fa-users"></i>Belum ada user terdaftar</div>`;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Saldo</th>
+                            <th>Transaksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${users.map(u => `
+                            <tr>
+                                <td><strong>${u.username}</strong></td>
+                                <td>${u.email}</td>
+                                <td>${u.phone}</td>
+                                <td>Rp ${(u.balance || 0).toLocaleString()}</td>
+                                <td>${(u.transactions || []).length}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    function renderNotifHistory() {
+        const container = document.getElementById('notifHistory');
+        let allNotifs = [];
+
+        allUsers.forEach(user => {
+            if (user.notifications) {
+                user.notifications.forEach(n => {
+                    if (n.fromAdmin) {
+                        allNotifs.push({ ...n, targetUser: user.username });
+                    }
+                });
+            }
+        });
+
+        if (allNotifs.length === 0) {
+            container.innerHTML = `<div class="empty-state"><i class="fas fa-bell-slash"></i>Belum ada notifikasi terkirim</div>`;
+            return;
+        }
+
+        allNotifs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        container.innerHTML = allNotifs.slice(0, 20).map(n => `
+            <div class="notif-item">
+                <div class="msg">${n.message}</div>
+                <div>
+                    <span class="target">${n.targetUser === 'all' ? '📢 Semua User' : '👤 ' + n.targetUser}</span>
+                    <span class="time">${formatDate(n.timestamp)}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ============ POPULATE USER DROPDOWN ============
+    function populateUserDropdown() {
+        const select = document.getElementById('notifUser');
+        const users = allUsers.filter(u => !u.isAdmin);
+        
+        // Kosongkan dulu
+        select.innerHTML = '<option value="">-- Pilih User --</option>';
+        
+        if (users.length === 0) {
+            select.innerHTML = '<option value="">-- Belum ada user --</option>';
+            return;
+        }
+
+        users.forEach(u => {
+            const option = document.createElement('option');
+            option.value = u.username;
+            option.textContent = `${u.username} (${u.email})`;
+            select.appendChild(option);
+        });
+
+        console.log('Dropdown user terisi:', users.length, 'user');
+    }
+
+    // ============ ADMIN ACTIONS ============
+    window.approveTransaction = async function(username, transactionId) {
+        if (!confirm('Setujui transaksi ini?')) return;
+
+        const idx = allUsers.findIndex(u => u.username === username);
+        if (idx === -1) return;
+
+        const transIdx = allUsers[idx].transactions.findIndex(t => t.id === transactionId);
+        if (transIdx === -1) return;
+
+        const transaction = allUsers[idx].transactions[transIdx];
+        
+        transaction.status = 'Berhasil';
+        transaction.adminAction = true;
+
+        if (transaction.type === 'topup_pending') {
+            allUsers[idx].balance = (allUsers[idx].balance || 0) + transaction.amount;
+            transaction.description = `Top up saldo website - Disetujui admin`;
+        } else if (transaction.type === 'bayar_ewallet_pending') {
+            transaction.description = `Pembayaran ${transaction.method || 'E-Wallet'} ke ${transaction.target || '-'} - Disetujui admin`;
+        }
+
+        if (!allUsers[idx].notifications) allUsers[idx].notifications = [];
+        allUsers[idx].notifications.push({
+            id: Date.now(),
+            type: 'admin',
+            message: `✅ Transaksi Anda sebesar Rp ${transaction.amount.toLocaleString()} telah DISETUJUI admin.`,
+            timestamp: new Date().toISOString(),
+            read: false,
+            fromAdmin: true
+        });
+
+        await saveUsers(allUsers);
+        await loadAllData();
+        showNotifMessage('✅ Transaksi berhasil disetujui!');
+    };
+
+    window.rejectTransaction = async function(username, transactionId) {
+        if (!confirm('Tolak transaksi ini?')) return;
+
+        const idx = allUsers.findIndex(u => u.username === username);
+        if (idx === -1) return;
+
+        const transIdx = allUsers[idx].transactions.findIndex(t => t.id === transactionId);
+        if (transIdx === -1) return;
+
+        const transaction = allUsers[idx].transactions[transIdx];
+        
+        transaction.status = 'Ditolak';
+        transaction.adminAction = true;
+
+        if (transaction.type === 'bayar_ewallet_pending') {
+            allUsers[idx].balance = (allUsers[idx].balance || 0) + transaction.amount;
+            transaction.description = `Pembayaran ${transaction.method || 'E-Wallet'} - Ditolak admin (saldo dikembalikan)`;
+        } else if (transaction.type === 'topup_pending') {
+            transaction.description = `Top up saldo website - Ditolak admin`;
+        }
+
+        if (!allUsers[idx].notifications) allUsers[idx].notifications = [];
+        allUsers[idx].notifications.push({
+            id: Date.now(),
+            type: 'admin',
+            message: `❌ Transaksi Anda sebesar Rp ${transaction.amount.toLocaleString()} telah DITOLAK admin.`,
+            timestamp: new Date().toISOString(),
+            read: false,
+            fromAdmin: true
+        });
+
+        await saveUsers(allUsers);
+        await loadAllData();
+        showNotifMessage('❌ Transaksi ditolak.');
+    };
+
+    // ============ KIRIM NOTIFIKASI ============
+    document.getElementById('notifTarget').addEventListener('change', function() {
+        const specificDiv = document.getElementById('specificUserDiv');
+        if (this.value === 'specific') {
+            specificDiv.style.display = 'block';
+            // Refresh dropdown saat dipilih
+            populateUserDropdown();
+        } else {
+            specificDiv.style.display = 'none';
+        }
+    });
+
+    document.getElementById('sendNotifBtn').addEventListener('click', async function() {
+        const target = document.getElementById('notifTarget').value;
+        const specificUser = document.getElementById('notifUser').value;
+        const message = document.getElementById('notifMessage').value.trim();
+
+        if (!message) {
+            showNotifMessage('Masukkan pesan notifikasi!', true);
+            return;
+        }
+
+        if (target === 'specific' && !specificUser) {
+            showNotifMessage('Pilih user tujuan!', true);
+            return;
+        }
+
+        await loadUsers();
+
+        if (target === 'all') {
+            let sentCount = 0;
+            allUsers.forEach(user => {
+                if (!user.isAdmin) {
+                    if (!user.notifications) user.notifications = [];
+                    user.notifications.push({
+                        id: Date.now() + Math.random() * 1000,
+                        type: 'admin',
+                        message: message,
+                        timestamp: new Date().toISOString(),
+                        read: false,
+                        fromAdmin: true,
+                        targetUser: 'all'
+                    });
+                    sentCount++;
+                }
+            });
+            await saveUsers(allUsers);
+            showNotifMessage(`📢 Notifikasi berhasil dikirim ke ${sentCount} user!`);
+        } else {
+            const user = allUsers.find(u => u.username === specificUser);
+            if (!user) {
+                showNotifMessage('User tidak ditemukan!', true);
+                return;
+            }
+            if (!user.notifications) user.notifications = [];
+            user.notifications.push({
+                id: Date.now() + Math.random() * 1000,
+                type: 'admin',
+                message: message,
+                timestamp: new Date().toISOString(),
+                read: false,
+                fromAdmin: true,
+                targetUser: specificUser
+            });
+            await saveUsers(allUsers);
+            showNotifMessage(`✅ Notifikasi berhasil dikirim ke ${specificUser}!`);
+        }
+
+        document.getElementById('notifMessage').value = '';
+        await loadAllData();
+    });
+
+    // ============ LOAD ALL DATA ============
+    async function loadAllData() {
+        await loadUsers();
+        renderStats();
+        renderPending();
+        renderAllTransactions();
+        renderUsers();
+        renderNotifHistory();
+        populateUserDropdown();
+        console.log('Data loaded. Total users:', allUsers.filter(u => !u.isAdmin).length);
+    }
+
+    // ============ TABS ============
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById(this.dataset.tab).classList.add('active');
+            
+            // Refresh dropdown saat tab notifikasi di klik
+            if (this.dataset.tab === 'tabNotif') {
+                populateUserDropdown();
+            }
+        });
+    });
+
+    // ============ AUTO REFRESH ============
+    setInterval(() => {
+        if (isAdminLoggedIn) loadAllData();
+    }, 30000);
+</script>
+</body>
+</html>
